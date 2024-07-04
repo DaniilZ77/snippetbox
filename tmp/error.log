@@ -1,0 +1,4 @@
+signal: interrupt
+ERROR	2024/07/03 23:26:29 main.go:30: listen tcp :4000: bind: address already in use
+exit status 1
+signal: interrupt
