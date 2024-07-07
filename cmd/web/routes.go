@@ -1,17 +1,30 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *application) routes() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet", app.showSnippet)
-	mux.HandleFunc("/snippet/create", app.createSnippet)
+	"github.com/julienschmidt/httprouter"
+	"github.com/justinas/alice"
+)
+
+func (app *application) routes() http.Handler {
+	router := httprouter.New()
+
+	router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		app.notFound(w)
+	})
 
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir("./ui/static")})
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 
-	mux.Handle("/static", http.NotFoundHandler())
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	dynamic := alice.New(app.sessionManager.LoadAndSave)
 
-	return mux
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+	router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.showSnippet))
+	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.showCreateSnippetForm))
+	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.createSnippet))
+
+	standart := alice.New(app.recoverPanic, app.logRequests, secureHeaders)
+
+	return standart.Then(router)
 }

@@ -16,8 +16,12 @@
     </header>
     <nav>
         <a href='/'>Домашняя страница</a>
+        <a href='/snippet/create'>Создать заметку</a>
     </nav>
     <main>
+        {{with .Flash}}
+            <div class='flash'>{{.}}</div>
+        {{end}}
         {{template "main" .}}
     </main>
     {{template "footer" .}}
