@@ -90,7 +90,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	form.CheckField(validator.NotBlank(form.Title), "title", "Это поле не может быть пустым")
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "Это поле не может содержать более чем 100 символов")
 	form.CheckField(validator.NotBlank(form.Content), "content", "Это поле не может быть пустым")
-	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "Это поле должно быть равно 1, 7 или 365")
+	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "Это поле должно быть равно 1, 7 или 365")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
@@ -167,6 +167,7 @@ func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
 	var form userLoginForm
 
 	err := app.decodePostForm(r, &form)
+
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
